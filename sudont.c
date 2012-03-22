@@ -31,7 +31,7 @@ DWORD GetFileMandatoryLabel(wchar_t *file)
 	ACL_SIZE_INFORMATION asi;
 	void *mlace;
 	SID *mlsid;
-	DWORD mlrid = 0;
+	DWORD mlrid = -1;
 	int i;
 
 	GetFileSecurity(file, LABEL_SECURITY_INFORMATION, NULL, 0, &szreq);
@@ -85,6 +85,7 @@ BOOL SetTokenMandatoryLabel(HANDLE token, DWORD mlrid)
 	PSID integsid;
 	SID_IDENTIFIER_AUTHORITY mandlblauth = SECURITY_MANDATORY_LABEL_AUTHORITY;
 	TOKEN_MANDATORY_LABEL tml;
+	BOOL result;
 
 	if (!AllocateAndInitializeSid(&mandlblauth, 1, mlrid, 0, 0, 0, 0, 0, 0, 0, &integsid))
 		return FALSE;
@@ -92,7 +93,10 @@ BOOL SetTokenMandatoryLabel(HANDLE token, DWORD mlrid)
 	tml.Label.Sid = integsid;
 	tml.Label.Attributes = SE_GROUP_INTEGRITY;
 
-	return SetTokenInformation(token, TokenIntegrityLevel, &tml, sizeof(TOKEN_MANDATORY_LABEL));
+	result = SetTokenInformation(token, TokenIntegrityLevel, &tml, sizeof(TOKEN_MANDATORY_LABEL));
+	FreeSid(integsid);
+
+	return result;
 }
 
 int wmain(int argc, wchar_t* argv[])
@@ -162,12 +166,16 @@ int wmain(int argc, wchar_t* argv[])
 	if (!CreateRestrictedToken(hcurtok, DISABLE_MAX_PRIVILEGE, 1, &saa, 0, 0, 0, 0, &hnewtok)) {
 		wprintf(L"sudont: failed to create restricted token (%d)\n", GetLastError());
 		CloseHandle(hcurtok);
+		FreeSid(adminsid);
 		return 1;
 	}
 
 	CloseHandle(hcurtok);
+	FreeSid(adminsid);
 
-	if ((mlrid = GetFileMandatoryLabel(argv[1])) > SECURITY_MANDATORY_MEDIUM_RID)
+	mlrid = GetFileMandatoryLabel(argv[1]);
+
+	if (mlrid == -1 || mlrid > SECURITY_MANDATORY_MEDIUM_RID)
 		mlrid = SECURITY_MANDATORY_MEDIUM_RID;
 
 	if (!SetTokenMandatoryLabel(hnewtok, mlrid)) {
