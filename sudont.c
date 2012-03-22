@@ -184,7 +184,7 @@ int wmain(int argc, wchar_t* argv[])
 		return 1;
 	}
 
-	for (i = 2; i < argc; i++) {
+	for (i = 1; i < argc; i++) {
 		if (pos > 0)
 			cmdline[pos++] = ' ';
 
