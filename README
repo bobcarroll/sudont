@@ -1,0 +1,10 @@
+sudont is a Windows console application that will execute a command without
+administrator rights. This is necessary for situations when a user is
+running as an administrator with UAC turned off, or is currently elevated.
+
+When sudont spawns the new process, all system privileges are disabled and
+rights associated with the built-in administrators group will be denied.
+Further, the integrity level is reduced to medium, or lower if the process
+image has an explicit (and lower) integrity level defined.
+
+Supported on Windows Vista, Windows 7, and Windows Server 2008 only.
