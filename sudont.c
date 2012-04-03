@@ -134,13 +134,13 @@ int wmain(int argc, wchar_t* argv[])
 			TOKEN_QUERY | TOKEN_ADJUST_DEFAULT | TOKEN_ADJUST_PRIVILEGES | TOKEN_DUPLICATE | TOKEN_ASSIGN_PRIMARY, 
 			&hcurtok)) {
 		wprintf(L"sudont: failed to open process token (%d)\n", GetLastError());
-		return 1;
+		return 0;
 	}
 
 	if (!AdjustTokenPrivileges(hcurtok, FALSE, &newtp, sizeof(TOKEN_PRIVILEGES), &oldtp, &dwoldtpsz)) {
 		wprintf(L"sudont: failed to enable impersonation privilege (%d)\n", GetLastError());
 		CloseHandle(hcurtok);
-		return 1;
+		return 0;
 	}
 
 	if (!AllocateAndInitializeSid(
@@ -157,7 +157,7 @@ int wmain(int argc, wchar_t* argv[])
 			&adminsid)) {
 		wprintf(L"sudont: failed to allocate admin SID (%d)\n", GetLastError());
 		CloseHandle(hcurtok);
-		return 1;
+		return 0;
 	}
 
 	saa.Sid = adminsid;
@@ -167,7 +167,7 @@ int wmain(int argc, wchar_t* argv[])
 		wprintf(L"sudont: failed to create restricted token (%d)\n", GetLastError());
 		CloseHandle(hcurtok);
 		FreeSid(adminsid);
-		return 1;
+		return 0;
 	}
 
 	CloseHandle(hcurtok);
@@ -181,7 +181,7 @@ int wmain(int argc, wchar_t* argv[])
 	if (!SetTokenMandatoryLabel(hnewtok, mlrid)) {
 		wprintf(L"sudont: failed to set token mandatory label (%d)\n", GetLastError());
 		CloseHandle(hnewtok);
-		return 1;
+		return 0;
 	}
 
 	for (i = 1; i < argc; i++) {
@@ -215,9 +215,9 @@ int wmain(int argc, wchar_t* argv[])
 			&pi)) {
 		wprintf(L"sudont: failed to create new process (%d)\n", GetLastError());
 		CloseHandle(hnewtok);
-		return 1;
+		return 0;
 	}
 	
 	CloseHandle(hnewtok);
-	return 0;
+	return pi.dwProcessId;
 }
