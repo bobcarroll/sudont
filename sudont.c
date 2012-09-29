@@ -32,7 +32,6 @@ DWORD GetFileMandatoryLabel(wchar_t *file)
 	void *mlace;
 	SID *mlsid;
 	DWORD mlrid = -1;
-	int i;
 
 	GetFileSecurity(file, LABEL_SECURITY_INFORMATION, NULL, 0, &szreq);
 	if (szreq == 0)
@@ -101,7 +100,7 @@ BOOL SetTokenMandatoryLabel(HANDLE token, DWORD mlrid)
 
 int wmain(int argc, wchar_t* argv[])
 {
-	wchar_t cmdline[10240];
+	wchar_t cmdline[MAX_PATH];
 	HANDLE hcurtok;
 	HANDLE hnewtok;
 	LUID incrquotaluid;
@@ -189,11 +188,13 @@ int wmain(int argc, wchar_t* argv[])
 			cmdline[pos++] = ' ';
 
 		len = wcslen(argv[i]);
-		if (pos + len >= 10240)
+		if (pos + len + 2 >= MAX_PATH)
 			break;
 
+		cmdline[pos++] = '\"';
 		CopyMemory(cmdline + pos, argv[i], len * sizeof(wchar_t));
 		pos += len;
+		cmdline[pos++] = '\"';
 	}
 	cmdline[pos] = '\0';
 
